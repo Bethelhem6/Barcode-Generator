@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSnC3F5v4jw2wIjz7KzN-3c4Y4DR_qT16rNQQ&s" type="image/x-icon">
+    <title>Vintage ERP Barcode Generator</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jsbarcode/3.11.0/JsBarcode.all.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        h1 {
+            color: #2C3E50;
+        }
+        label {
+            font-weight: bold;
+        }
+        #barcode {
+            margin-top: 20px;
+            border: 1px solid #BDC3C7;
+            padding: 10px;
+            background-color: #ECF0F1;
+            border-radius: 5px;
+        }
+        button {
+            background-color: #3498DB;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #2980B9;
+        }
+        select {
+            padding: 5px;
+            border: 1px solid #BDC3C7;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Vintage ERP Barcode Generator</h1>
+    <label for="barcodeType">Select Barcode Type:</label>
+    <select id="barcodeType">
+        <option value="CODE39" selected>CODE39</option>
+        <option value="EAN">EAN</option>
+        <option value="UPC">UPC</option>
+        <option value="UPC-A">UPC-A</option>
+        <option value="EAN-12">EAN-12</option>
+        <option value="EAN-8">EAN-8</option>
+        <option value="GS1">GS1</option>
+        <option value="GTIN">GTIN</option>
+        <option value="ISBN">ISBN</option>
+        <option value="ISBN-10">ISBN-10</option>
+        <option value="ISBN-13">ISBN-13</option>
+        <option value="ISSN">ISSN</option>
+        <option value="JAN">JAN</option>
+        <option value="PZN">PZN</option>
+        <option value="CODE128">Code 128</option>
+    </select>
+    
+    <br><br>
+
+    <button id="generateBtn">Generate Random Barcode</button>
+
+    <svg id="barcode"></svg>
+
+    <script>
+        function generateRandomValue(barcodeType) {
+            let randomValue = '';
+            switch (barcodeType) {
+                case 'EAN':
+                case 'EAN-12':
+                    // EAN requires 12 digits (plus 1 check digit)
+                    for (let i = 0; i < 12; i++) {
+                        randomValue += Math.floor(Math.random() * 10).toString();
+                    }
+                    randomValue += calculateEANCheckDigit(randomValue);
+                    break;
+                case 'EAN-8':
+                    // EAN-8 requires 7 digits (plus 1 check digit)
+                    for (let i = 0; i < 7; i++) {
+                        randomValue += Math.floor(Math.random() * 10).toString();
+                    }
+                    randomValue += calculateEANCheckDigit(randomValue);
+                    break;
+                case 'UPC':
+                case 'UPC-A':
+                    // UPC requires 11 digits (plus 1 check digit)
+                    for (let i = 0; i < 11; i++) {
+                        randomValue += Math.floor(Math.random() * 10).toString();
+                    }
+                    randomValue += calculateUPCCheckDigit(randomValue);
+                    break;
+                case 'CODE39':
+                    // Code 39 supports alphanumeric characters and some special characters
+                    const chars39 = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+                    for (let i = 0; i < 10; i++) {
+                        randomValue += chars39.charAt(Math.floor(Math.random() * chars39.length));
+                    }
+                    break;
+                case 'ISBN':
+                case 'ISBN-13':
+                    // ISBN-13 is the same as EAN-13
+                    for (let i = 0; i < 12; i++) {
+                        randomValue += Math.floor(Math.random() * 10).toString();
+                    }
+                    randomValue += calculateEANCheckDigit(randomValue);
+                    break;
+                case 'ISBN-10':
+                    // Generate a random ISBN-10
+                    for (let i = 0; i < 9; i++) {
+                        randomValue += Math.floor(Math.random() * 10).toString();
+                    }
+                    randomValue += calculateISBN10CheckDigit(randomValue);
+                    break;
+                case 'GTIN':
+                case 'GS1':
+                case 'JAN':
+                case 'PZN':
+                    // These follow EAN-13 rules
+                    for (let i = 0; i < 12; i++) {
+                        randomValue += Math.floor(Math.random() * 10).toString();
+                    }
+                    randomValue += calculateEANCheckDigit(randomValue);
+                    break;
+                case 'CODE128':
+                    // Code 128 supports alphanumeric characters
+                    const chars128 = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+                    for (let i = 0; i < 10; i++) {
+                        randomValue += chars128.charAt(Math.floor(Math.random() * chars128.length));
+                    }
+                    break;
+                case 'ISSN':
+                    // ISSN is 7 digits + 1 check digit
+                    for (let i = 0; i < 7; i++) {
+                        randomValue += Math.floor(Math.random() * 10).toString();
+                    }
+                    randomValue += calculateEANCheckDigit(randomValue);
+                    break;
+            }
+            return randomValue;
+        }
+
+        function calculateEANCheckDigit(ean) {
+            let sum = 0;
+            for (let i = 0; i < ean.length; i++) {
+                sum += (i % 2 === 0 ? parseInt(ean[i]) : parseInt(ean[i]) * 3);
+            }
+            return (10 - (sum % 10)) % 10;
+        }
+
+        function calculateUPCCheckDigit(upc) {
+            let sum = 0;
+            for (let i = 0; i < upc.length; i++) {
+                sum += (i % 2 === 0 ? parseInt(upc[i]) : parseInt(upc[i]) * 3);
+            }
+            return (10 - (sum % 10)) % 10;
+        }
+
+        function calculateISBN10CheckDigit(isbn) {
+            let sum = 0;
+            for (let i = 0; i < isbn.length; i++) {
+                sum += (i + 1) * parseInt(isbn[i]);
+            }
+            const checkDigit = sum % 11;
+            return checkDigit === 10 ? 'X' : checkDigit.toString();
+        }
+
+        document.getElementById('generateBtn').addEventListener('click', function() {
+            const barcodeType = document.getElementById('barcodeType').value;
+            const randomValue = generateRandomValue(barcodeType);
+
+            document.getElementById('barcode').innerHTML = '';
+
+            JsBarcode("#barcode", randomValue, {
+                format: barcodeType.replace(/-/g, ''), // Remove hyphens for format compatibility
+                width: 2,
+                height: 100,
+                displayValue: true
+            });
+        });
+    </script>
+</body>
+</html>
